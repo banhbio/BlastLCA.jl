@@ -1,0 +1,3 @@
+[deps]
+BlastLCA = "59c79803-3a52-40d7-aec0-3a5c885b2802"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
