@@ -3,6 +3,9 @@ uuid = "59c79803-3a52-40d7-aec0-3a5c885b2802"
 authors = ["banhbio <ban@kuicr.kyoto-u.ac.jp>"]
 version = "0.1.0"
 
+[deps]
+SQLite = "0aa819cd-b072-5ff4-a722-6bc24af294d9"
+
 [compat]
 julia = "1.5"
 
