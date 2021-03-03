@@ -1,5 +1,8 @@
 module BlastLCA
 
-# Write your package code here.
+using SQLite
+export SQLite
+
+include("database.jl")
 
 end
