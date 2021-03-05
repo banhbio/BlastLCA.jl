@@ -1,5 +1,11 @@
-function LCA(leaves::Dict{Taxon,Int},cutoff::Float64)
+function BestHit(leaves::Dict{Taxon,Int})
+    return last(findmax(leaves))
+end
+
+function LCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
     @assert cutoff > 0.5 && cutoff < 1
+    besthitscore = first(findmax(leaves))
+    filter!(x -> last(x) < besthitscore*minimal, leaves)
 
     taxa = collect(keys(leaves))
     tree = topolgoy(taxa)
