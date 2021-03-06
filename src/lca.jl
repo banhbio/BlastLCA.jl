@@ -18,7 +18,7 @@ function LCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
     current_lca = tree
     while true
         current_node = pop!(next)
-        sub_bitscore = bitscore(current_node,leaves)
+        sub_bitscore = sum([leaves[leave.node] for leave in Leaves(tree)])
         if sub_bitscore >= threshold_bitscore
             current_lca = current_node
             children_tree =  current_node.children
@@ -28,8 +28,4 @@ function LCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
             return current_lca.node
         end
     end
-end
-
-function bitscore(tree::PhyloTree,leaves::Dict{Taxon,Int})
-     return sum([leaves[leave.node] for leave in Leaves(tree)])
 end
