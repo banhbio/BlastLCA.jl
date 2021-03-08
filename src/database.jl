@@ -1,6 +1,6 @@
 const table="accession2taxid"
 
-function create!(source::String, db::SQLite.DB ; chunk::Int=2^10, overwrite::Bool=false, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
+function create!(source::String, db::SQLite.DB ; chunk::Int=400, overwrite::Bool=false, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
     if overwrite
         DBInterface.execute(db,"DROP TABLE IF EXISTS $table")
     end
