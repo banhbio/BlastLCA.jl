@@ -1,14 +1,16 @@
-function blastLCA(;filepath::AbstractString, outpath::AbstractString, blastLCAdb::BlastLCA.DB, taxonomydb::Taxonomy.DB, evalue::Float64, minimal::Float64,cutoff::Float64,header::Bool=false)
+function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
     f=open(filepath,"r")
     g=open(outpath,"w")
 
-    header ? readline(f): nothing
+    header ? readline(f) : nothing
 
     current_qseqid = ""
     bitscores = Dict{Taxon,Int}()
-    line = readline(f)
-    rows = split(line, "\t")
-    while true
+
+    while !eof(f)
+        line = readline(f)
+        rows = split(line, "\t")
+        
         @assert length(row) == 12
 
         qseqid = rows[1]
@@ -16,7 +18,7 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, blastLCAdb
         sseqid = rows[2]
         bitscore = rows[12]
 
-        taxid = get(blastLCAdb, sseqid, nothing)
+        taxid = get(sqlite, sseqid, nothing)
         @assert taxid !== nothing
 
         taxon = Taxon(taxid,taxonomydb)
@@ -33,7 +35,7 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, blastLCAdb
         next_qseqid = next_rows[1]
 
         if qseqid != next_qseqid
-            assignment = LCA(d,minimal,cutoff)
+            assignment = method(bitscores)
             write(g,"$(qseqid)\t$(assignment)")
             qseqid = next_qseqid
             bitscores = Dict{Taxon,Int}()
