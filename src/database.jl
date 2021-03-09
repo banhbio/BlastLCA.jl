@@ -1,9 +1,7 @@
 const table="accession2taxid"
 
 function create!(db::SQLite.DB, source::String; chunk::Int=400, overwrite::Bool=false, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
-    if overwrite
-        DBInterface.execute(db,"DROP TABLE IF EXISTS $table")
-    end
+    overwrite ? DBInterface.execute(db,"DROP TABLE IF EXISTS $table") : nothing
     DBInterface.execute(db,"CREATE TABLE $table(accession TEXT PRIMARY KEY, taxid INTEGER)")
     insert!(db, source; chunk=chunk, header=header, accession_col=accession_col, taxid_col=taxid_col)
     return db
@@ -11,9 +9,7 @@ end
 
 function Base.insert!(db::SQLite.DB, source::String; chunk::Int=400, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
     f = open(source, "r")
-    if header
-        readline(f) #skip header
-    end
+    header ? readline(f) : nothing #skip header
     _insert_rows!(db, f, chunk, accession_col, taxid_col)
     close(f)
 end
