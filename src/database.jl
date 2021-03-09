@@ -1,6 +1,6 @@
 const table="accession2taxid"
 
-function create!(source::String, db::SQLite.DB ; chunk::Int=400, overwrite::Bool=false, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
+function create!(db::SQLite.DB, source::String; chunk::Int=400, overwrite::Bool=false, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
     if overwrite
         DBInterface.execute(db,"DROP TABLE IF EXISTS $table")
     end
@@ -9,7 +9,7 @@ function create!(source::String, db::SQLite.DB ; chunk::Int=400, overwrite::Bool
     return db
 end
 
-function Base.insert!(db::SQLite.DB, source::String; chunk::Int=chunk, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
+function Base.insert!(db::SQLite.DB, source::String; chunk::Int=400, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
     f = open(source, "r")
     if header
         readline(f) #skip header
@@ -20,12 +20,12 @@ end
 
 function _insert_rows!(db::SQLite.DB, f::IOStream, chunk::Int, accession_col::Int, taxid_col::Int)
     while !eof(f)
-        chunks = [readline(f) for _ in 1:chunk]
+        chunks = [readline(f) for _ in 1:chunk if !eof(f)]
         cols = map( x-> split(x, "\t"), chunks)
-        accession2taxid = map(x -> (getindex(x,accession_col),getindex(x,taxid_cols), cols)
-        _accession2taxid = map(x -> "("*first(x)*","*last(x)*")", accession2taxid))
-        rows = join(_accession2taxid)
-        DBInterface.execute(db, "INSERT INTO $table(accession, taxid) VALUES $rows")
+        accessions = map(x -> getindex(x,accession_col), cols)
+        taxids = map(x -> getindex(x,taxid_col), cols)
+        stmt = DBInterface.prepare(db, "INSERT INTO $table(accession, taxid) VALUES(:accession,:taxid)")
+        DBInterface.executemany(stmt, (accession=accessions, taxid=taxids))
     end
 end
 
