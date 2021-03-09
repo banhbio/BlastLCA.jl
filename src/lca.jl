@@ -13,7 +13,7 @@ function LCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
     total_bitscore = sum(values(leaves))
     threshold_bitscore = cutoff * total_bitscore
 
-    next = Stack{PhyloTree}(10)
+    next = Stack{PhyloTree}()
     push!(next,tree)
     current_lca = tree
     while true
