@@ -1,31 +1,31 @@
 function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
-    f=open(filepath,"r")
-    g=open(outpath,"w")
+    f = open(filepath,"r")
+    o = open(outpath,"w")
+    blastLCA(f, o; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header)
+    close(f)
+    close(o)
+end
 
-    header ? readline(f) : nothing
+function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
+    header ? readline(f) : nothing #skip header
 
-    current_qseqid = ""
     bitscores = Dict{Taxon,Int}()
 
-    while !eof(f)
-        line = readline(f)
-        rows = split(line, "\t")
-        
-        @assert length(row) == 12
-
+    line = readline(f) #read first line
+    while true
+        rows = split(line, "\t")    
+        @assert length(rows) == 12
         qseqid = rows[1]
-
         sseqid = rows[2]
         bitscore = rows[12]
-
         taxid = get(sqlite, sseqid, nothing)
         @assert taxid !== nothing
 
-        taxon = Taxon(taxid,taxonomydb)
-        if ! haskey(d, taxon)
+        taxon = Taxon(taxid,taxonomy)
+        if ! haskey(bitscores, taxon)
             bitscores[taxon] = bitscore
         else
-            if bitscore > d[taxon]
+            if bitscore > bitscores[taxon]
                 bitscores[taxon] = bitscore
             end
         end
@@ -36,13 +36,12 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQ
 
         if qseqid != next_qseqid
             assignment = method(bitscores)
-            write(g,"$(qseqid)\t$(assignment)")
-            qseqid = next_qseqid
-            bitscores = Dict{Taxon,Int}()
+            write(o,"$(qseqid)\t$(assignment)")
+            bitscores = Dict{Taxon,Int}() #initialize
         end
 
-        rows = next_rows
+        line = next
+        
+        eof(f) ? break : nothing
     end
-    close(f)
-    close(g)
 end
