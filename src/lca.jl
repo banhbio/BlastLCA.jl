@@ -6,7 +6,7 @@ function LCA(leaves::Dict{Taxon,Int},minimal::Float64)
     besthitscore = first(findmax(leaves))
     filter!(x -> last(x) < besthitscore*minimal, leaves)
     taxa = collect(keys(leaves))
-    return lca(taxa) 
+    return lca_node = lca(taxa)
 end
 
 function weightedLCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
