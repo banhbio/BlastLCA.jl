@@ -2,7 +2,14 @@ function BestHit(leaves::Dict{Taxon,Int})
     return last(findmax(leaves))
 end
 
-function LCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
+function LCA(leaves::Dict{Taxon,Int},minimal::Float64)
+    besthitscore = first(findmax(leaves))
+    filter!(x -> last(x) < besthitscore*minimal, leaves)
+    taxa = collect(keys(leaves))
+    return lca(taxa) 
+end
+
+function weightedLCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
     @assert cutoff > 0.5 && cutoff < 1
     besthitscore = first(findmax(leaves))
     filter!(x -> last(x) < besthitscore*minimal, leaves)
