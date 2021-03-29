@@ -2,14 +2,17 @@ function BestHit(leaves::Dict{Taxon,Int})
     return last(findmax(leaves))
 end
 
-function LCA(leaves::Dict{Taxon,BlastResult},minimal::Float64)
+function LCA(leaves::Dict{Taxon,BlastResult},minimal::Float64,ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
     besthitscore = first(findmax([last(l).bitscore for l in leaves]))
     filter!(x -> last(x).bitscore < besthitscore*minimal, leaves)
     taxa = collect(keys(leaves))
-    return lca_node = lca(taxa)
+    taxon = lca(taxa)
+    lineage = Lineage(taxon)
+    reformated_lineage = cut_by_precision(lineage, ranks, precision)
+    return reformated_lineage
 end
 
-function weightedLCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
+function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::Float64, ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
     @assert cutoff > 0.5 && cutoff < 1
     besthitscore = first(findmax([last(l).bitscore for l in leaves]))
     filter!(x -> last(x).bitscore < besthitscore*minimal, leaves)
@@ -35,5 +38,23 @@ function weightedLCA(leaves::Dict{Taxon,Int}, minimal::Float64, cutoff::Float64)
             break
         end
     end
-    return current_lca.node
+    taxon = current_lca.node
+    blastresult = leaves[taxon]
+    lineage = Lineage(taxon)
+    reformated_lineage = cut_by_precision(lineage, ranks, precision)
+    return reformated_lineage
+end
+
+function cut_by_precision(lineage::Lineage, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64})
+    reformated_lineage = reformated(lineage, ranks)
+    for r in ranks
+        if !haskey(precision, r)
+            continue
+        end
+
+        if precision[r] > blastresult.pident
+            return reformated_lineage[Until(r)]
+        end
+    end
+    return reformated_lineage
 end
