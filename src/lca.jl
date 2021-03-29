@@ -2,7 +2,7 @@ function BestHit(leaves::Dict{Taxon,Int})
     return last(findmax(leaves))
 end
 
-function LCA(leaves::Dict{Taxon,BlastResult},minimal::Float64,ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
+function freeLCA(leaves::Dict{Taxon,BlastResult},minimal::Float64,ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
     besthitscore = first(findmax([last(l).bitscore for l in leaves]))
     filter!(x -> last(x).bitscore < besthitscore*minimal, leaves)
     taxa = collect(keys(leaves))
