@@ -16,7 +16,6 @@ end
 
 function BlastResult(line::AbstractString)
     cols = split(line, "\t")
-    @assert length(cols) == 12
     return BlastResult(cols)
 end
 
@@ -34,8 +33,8 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
     results = Dict{Taxon,BlastResult}()
 
     line = readline(f) #read first line
-    record = BlastResult(line)
     while true
+        record = BlastResult(line)
         taxid = get(sqlite, record.sseqid, nothing)
         @assert taxid !== nothing
 
@@ -49,16 +48,14 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
         end
 
         next = readline(f)
-        next_record = BlastResult(next)
+        next_record = split(line, "\t")[1]
 
-        if record.qseqid != next_record.qseqid
-            assignment = method(results)
+        if record.qseqid != next_qseqid  
+            lineage = method(results)
             write(o,"$(qseqid)\t$(assignment)")
             results = Dict{Taxon,BlastResult}() #initialize
         end
-
-        record = next_record
         
-        eof(f) ? break : nothing
+        isempty(next) ? break : line = next
     end
 end
