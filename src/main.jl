@@ -56,7 +56,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
         if ! haskey(results, taxon)
             results[taxon] = record
         else
-            if record.bitscore > results[taxon].bitscores
+            if record.bitscore > results[taxon].bitscore
                 results[taxon] = record
             end
         end
