@@ -10,7 +10,7 @@ struct BlastResult
     sstart::Int
     send::Int
     evalue::Float64
-    bitscore::Int
+    bitscore::Float64
 end
 
 
