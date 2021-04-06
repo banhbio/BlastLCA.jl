@@ -62,7 +62,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
         end
 
         next = readline(f)
-        next_record = split(line, "\t")[1]
+        next_qseqid = split(line, "\t")[1]
 
         if record.qseqid != next_qseqid  
             lineage = method(results)
