@@ -7,7 +7,7 @@ struct BlastResult
     gapopen::Int
     qstart::Int
     qend::Int
-    sstrat::Int
+    sstart::Int
     send::Int
     evalue::Float64
     bitscore::Int
@@ -16,7 +16,21 @@ end
 
 function BlastResult(line::AbstractString)
     cols = split(line, "\t")
-    return BlastResult(cols)
+
+    qseqid = cols[1]
+    sseqid = cols[2]
+    pident = parse(Float64, cols[3])
+    length = parse(Int, cols[4])
+    mismatch = parse(Int, cols[5])
+    gapopen = parse(Int, cols[6])
+    qstart = parse(Int, cols[7])
+    qend = parse(Int, cols[8])
+    sstart = parse(Int, cols[9])
+    send = parse(Int, cols[10])
+    evalue = parse(Float64, cols[11])
+    bitscore = parse(Int, cols[12])
+
+    return BlastResult(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
 end
 
 function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
@@ -52,8 +66,8 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
 
         if record.qseqid != next_qseqid  
             lineage = method(results)
-            line = lineage_line(lineage)
-            write(o,"$(qseqid)\t$(line)")
+            lineage_txt = lineage_line(lineage)
+            write(o,"$(qseqid)\t$(lineage_txt)")
             results = Dict{Taxon,BlastResult}() #initialize
         end
         
