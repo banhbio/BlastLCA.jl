@@ -28,7 +28,7 @@ function BlastResult(line::AbstractString)
     sstart = parse(Int, cols[9])
     send = parse(Int, cols[10])
     evalue = parse(Float64, cols[11])
-    bitscore = parse(Int, cols[12])
+    bitscore = parse(Float64, cols[12])
 
     return BlastResult(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
 end
