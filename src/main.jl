@@ -56,7 +56,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
 
         taxon = get(taxid, taxonomy, nothing)
 
-        if taxon === nothiing
+        if taxon === nothing
             @warn "There is no taxon correspondinig to $(taxid)!"
             @warn "continue..."
         else
