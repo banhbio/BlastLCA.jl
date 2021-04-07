@@ -77,7 +77,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
         if record.qseqid != next_qseqid  
             lineage = method(results)
             lineage_txt = lineage_line(lineage)
-            write(o,"$(qseqid)\t$(lineage_txt)")
+            write(o,"$(qseqid)\t$(lineage_txt)\n")
             results = Dict{Taxon,BlastResult}() #initialize
         end
         
