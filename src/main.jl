@@ -51,7 +51,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
         record = BlastResult(line)
         taxid = get(sqlite, record.sseqid, nothing)
         if taxid === nothing
-            @warn "record $(record.sseqid) has no taxid in $(sqlite.file)")
+            @warn "record $(record.sseqid) has no taxid in $(sqlite.file)"
             taxon = nothing
         else
             taxon = get(taxid, taxonomy, nothing)
