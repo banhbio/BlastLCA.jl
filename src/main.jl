@@ -54,12 +54,18 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
             error("record $(record.sseqid) has no taxid in $(sqlite.file)")
         end
 
-        taxon = Taxon(taxid,taxonomy)
-        if ! haskey(results, taxon)
-            results[taxon] = record
+        taxon = get(taxonomy, taxid, nothing)
+
+        if taxon === nothiing
+            @warn "There is no taxon correspondinig to $(taxid)!"
+            @warn "continue..."
         else
-            if record.bitscore > results[taxon].bitscore
+            if ! haskey(results, taxon)
                 results[taxon] = record
+            else
+                if record.bitscore > results[taxon].bitscore
+                    results[taxon] = record
+                end
             end
         end
 
