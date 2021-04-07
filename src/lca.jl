@@ -46,7 +46,7 @@ function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::
 end
 
 function cut_by_precision(lineage::Lineage, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64})
-    reformated_lineage = reformated(lineage, ranks)
+    reformated_lineage = reformat(lineage, ranks)
     for r in ranks
         if !haskey(precision, r)
             continue
