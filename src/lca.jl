@@ -41,11 +41,11 @@ function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::
     taxon = current_lca.node
     blastresult = leaves[taxon]
     lineage = Lineage(taxon)
-    reformated_lineage = cut_by_precision(lineage, ranks, precision)
+    reformated_lineage = cut_by_precision(lineage, ranks, precision, blastresult)
     return reformated_lineage
 end
 
-function cut_by_precision(lineage::Lineage, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64})
+function cut_by_precision(lineage::Lineage, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64}, blastresult::BlastResult)
     reformated_lineage = reformat(lineage, ranks)
     for r in ranks
         if !haskey(precision, r)
