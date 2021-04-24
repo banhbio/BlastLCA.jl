@@ -52,6 +52,7 @@ function cut_by_precision(current_lca::PhyloTree, ranks::Vector{Symbol}, precisi
 
         if r == rank(current_lca.node) || precision[r] > max_sub_pident
             return r
+        end
     end
     return ranks[end]
 end
