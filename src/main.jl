@@ -36,9 +36,12 @@ end
 function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
     f = open(filepath,"r")
     o = open(outpath,"w")
-    blastLCA(f, o; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header)
-    close(f)
-    close(o)
+    try
+        blastLCA(f, o; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header)
+    finally
+        close(f)
+        close(o)
+    end
 end
 
 function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
@@ -73,7 +76,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
 
         next = readline(f)
         next_qseqid = split(next, "\t")[1]
-        if record.qseqid != next_qseqid
+        if record.qseqid != next_qseqid && !isempty(results)
             lineage = method(results)
             lineage_txt = lineage_line(lineage)
             write(o,"$(record.qseqid)\t$(lineage_txt)\n")

@@ -15,12 +15,12 @@ end
 function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::Float64, ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
     @assert cutoff > 0.5 && cutoff < 1
     besthitscore = first(findmax([last(l).bitscore for l in leaves]))
-    filter!(x -> last(x).bitscore < besthitscore*minimal, leaves)
+    filtered_leaves = filter(x -> last(x).bitscore > besthitscore*minimal, leaves)
 
-    taxa = collect(keys(leaves))
+    taxa = collect(keys(filtered_leaves))
     tree = topolgoy(taxa)
 
-    total_bitscore = sum([last(l).bitscore for l in leaves])
+    total_bitscore = sum([last(l).bitscore for l in filtered_leaves])
     threshold_bitscore = cutoff * total_bitscore
 
     next = Stack{PhyloTree}()
@@ -54,7 +54,7 @@ function cut_by_precision(lineage::Lineage, ranks::Vector{Symbol}, precision::Di
 
         if precision[r] > blastresult.pident
             return reformated_lineage[Until(r)]
-        end
+    end
     end
     return reformated_lineage
 end
