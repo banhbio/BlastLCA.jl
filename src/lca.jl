@@ -28,7 +28,7 @@ function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::
     current_lca = tree
     while true
         current_node = pop!(next)
-        sub_bitscore = sum([leaves[leave.node].bitscore for leave in Leaves(tree)])
+        sub_bitscore = sum([leaves[leave.node].bitscore for leave in Leaves(current_node)])
         if sub_bitscore >= threshold_bitscore
             current_lca = current_node
             children_tree =  current_node.children
@@ -38,23 +38,20 @@ function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::
             break
         end
     end
-    taxon = current_lca.node
-    blastresult = leaves[taxon]
-    lineage = Lineage(taxon)
-    reformated_lineage = cut_by_precision(lineage, ranks, precision, blastresult)
+    corrected_rank = cut_by_precision(current_lca, ranks, precision, leaves)
+    reformated_lineage = reformat(Lineage(corrected_taxon), ranks)[Until(corrected_rank)]
     return reformated_lineage
 end
 
-function cut_by_precision(lineage::Lineage, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64}, blastresult::BlastResult)
-    reformated_lineage = reformat(lineage, ranks)
+function cut_by_precision(current_lca::PhyloTree, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64}, leaves::Dict{Taxon,BlastResult})
+    max_sub_pident = max([leaves[leave.node].pident for leave in Leaves(current_node)])
     for r in ranks
         if !haskey(precision, r)
             continue
         end
 
-        if precision[r] > blastresult.pident
-            return reformated_lineage[Until(r)]
+        if r == rank(current_lca.node) || precision[r] > max_sub_pident
+            return r
     end
-    end
-    return reformated_lineage
+    return ranks[end]
 end
