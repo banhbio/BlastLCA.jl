@@ -44,7 +44,7 @@ function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::
 end
 
 function cut_by_precision(current_lca::PhyloTree, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64}, leaves::Dict{Taxon,BlastResult})
-    max_sub_pident = max([leaves[leave.node].pident for leave in Leaves(current_lca)])
+    max_sub_pident = maximum([leaves[leave.node].pident for leave in Leaves(current_lca)])
     for r in ranks
         if !haskey(precision, r)
             continue
