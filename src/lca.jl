@@ -38,9 +38,10 @@ function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::
             break
         end
     end
+    lineage = Lineage(current_lca.node)
     corrected_rank = cut_by_precision(current_lca, ranks, precision, leaves)
-    reformated_lineage = reformat(Lineage(corrected_taxon), ranks)[Until(corrected_rank)]
-    return reformated_lineage
+    corrected_lineage = reformat(lineage, ranks)[Until(corrected_rank)]
+    return corrected_lineage
 end
 
 function cut_by_precision(current_lca::PhyloTree, ranks::Vector{Symbol}, precision::Dict{Symbol, Float64}, leaves::Dict{Taxon,BlastResult})
@@ -49,8 +50,7 @@ function cut_by_precision(current_lca::PhyloTree, ranks::Vector{Symbol}, precisi
         if !haskey(precision, r)
             continue
         end
-
-        if r == rank(current_lca.node) || precision[r] > max_sub_pident
+        if precision[r] > max_sub_pident
             return r
         end
     end
