@@ -33,18 +33,18 @@ function BlastResult(line::AbstractString)
     return BlastResult(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
 end
 
-function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
+function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species]) 
     f = open(filepath,"r")
     o = open(outpath,"w")
     try
-        blastLCA(f, o; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header)
+        blastLCA(f, o; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header, ranks=ranks)
     finally
         close(f)
         close(o)
     end
 end
 
-function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false)
+function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species])
     header ? readline(f) : nothing #skip header
 
     results = Dict{Taxon,BlastResult}()
@@ -77,7 +77,8 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
         next = readline(f)
         next_qseqid = split(next, "\t")[1]
         if record.qseqid != next_qseqid && !isempty(results)
-            lineage = method(results)
+            taxon = method(results)
+            lineage = reformat(Lineage(taxon), ranks)
             lineage_txt = lineage_line(lineage)
             write(o,"$(record.qseqid)\t$(lineage_txt)\n")
             results = Dict{Taxon,BlastResult}() #initialize
