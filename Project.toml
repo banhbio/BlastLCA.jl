@@ -11,7 +11,6 @@ Taxonomy = "10bb16a4-4bfc-432e-9419-4ca69c1a753c"
 [compat]
 DataStructures = "0.18"
 SQLite = "1.1"
-Taxonomy = "0.1"
 julia = "1.5"
 
 [extras]
