@@ -21,7 +21,7 @@ function _insert_rows!(db::SQLite.DB, f::IOStream, chunk::Int, accession_col::In
             chunks = [readline(f) for _ in 1:chunk if !eof(f)]
             cols = map( x-> split(x, "\t"), chunks)
             accessions = map(x -> getindex(x,accession_col), cols)
-            taxids = map(x -> getindex(x,taxid_col), cols)
+            taxids = map(x -> getindex(x,taxid_col), cols) 
             stmt = DBInterface.prepare(db, "INSERT INTO $table(accession, taxid) VALUES(:accession,:taxid)")
             DBInterface.executemany(stmt, (accession=accessions, taxid=taxids))
         end
