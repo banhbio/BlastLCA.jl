@@ -8,5 +8,5 @@ This is the tool to identify LCA from blast results.
 
 it requires
 - Blast result (-outfmt 6)
-- Correspondance tablw between taxonomy id and genes in the blast databse.
-- NCBI taxonomy databse
+- Correspondance table between taxonomy id and genes in the blast database.
+- NCBI taxonomy database
