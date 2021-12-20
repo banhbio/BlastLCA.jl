@@ -33,6 +33,8 @@ function BlastResult(line::AbstractString)
     return BlastResult(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
 end
 
+sseqid(record::BlastResult) = record.sseqid
+
 function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species]) 
     f = open(filepath,"r")
     o = open(outpath,"w")
@@ -52,9 +54,9 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
     line = readline(f) #read first line
     while true
         record = BlastResult(line)
-        taxid = get(sqlite, record.sseqid, nothing)
+        taxid = get(sqlite, sseqid(record), nothing)
         if taxid === nothing
-            @warn "record $(record.sseqid) has no taxid in $(sqlite.file)"
+            @warn "record $(sseqid(record)) has no taxid in $(sqlite.file)"
             taxon = nothing
         else
             taxon = get(taxid, taxonomy, nothing)
@@ -62,8 +64,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
 
 
         if taxon === nothing
-            @warn "There is no taxon correspondinig to $(taxid)!"
-            @warn "continue..."
+            @warn "There is no taxon correspondinig to $(taxid)!\ncontinue..."
         else
             if ! haskey(results, taxon)
                 results[taxon] = record
