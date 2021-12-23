@@ -2,7 +2,6 @@ module BlastLCA
 
 using Taxonomy
 using SQLite
-export SQLite
 using DataStructures:
     Stack
 export create!,insert!,get,
