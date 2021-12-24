@@ -40,14 +40,19 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQ
     f = open(filepath,"r")
     o = open(outpath,"w")
     try
-        blastLCA(f, o; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header, ranks=ranks)
+        lca_ch = blastLCA(f ; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header, ranks=ranks)
+        for (qseqid, taxon, lineage) in lca_ch
+            id = taxid(taxon)
+            lineage_txt = sprint(io -> print_lineage(io, lineage))
+            write(o, "$(qseqid)\t$(id)\t$(lineage_txt)\n")
+        end
     finally
         close(f)
         close(o)
     end
 end
 
-function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species])
+function blastLCA(f::IOStream ; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species])
 
     blastresult_ch = Channel{BlastResult}(32)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(32)
@@ -57,11 +62,7 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
     @async put_blastresults!(lcainput_ch, blastresult_ch, sqlite, taxonomy)
     @async lca_blastresults!(lineage_ch, lcainput_ch, method, ranks)
 
-    for (qseqid, taxon, lineage) in lineage_ch
-        id = taxid(taxon)
-        lineage_txt = sprint(io -> print_lineage(io, lineage))
-        write(o, "$(qseqid)\t$(id)\t$(lineage_txt)\n")
-    end
+    return lineage_ch
 end
 
 function parse_blastresult!(out_channel::Channel{BlastResult}, f::IOStream, header::Bool)
