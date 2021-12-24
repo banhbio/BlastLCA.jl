@@ -51,15 +51,16 @@ function blastLCA(f::IOStream, o::IOStream; sqlite::SQLite.DB, taxonomy::Taxonom
 
     blastresult_ch = Channel{BlastResult}(32)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(32)
-    lineage_ch = Channel{Tuple{String,Lineage}}(32)
+    lineage_ch = Channel{Tuple{String,Taxon,Lineage}}(32)
 
     @async parse_blastresult!(blastresult_ch, f, header)
     @async put_blastresults!(lcainput_ch, blastresult_ch, sqlite, taxonomy)
     @async lca_blastresults!(lineage_ch, lcainput_ch, method, ranks)
 
-    for (qseqid, lineage) in lineage_ch
+    for (qseqid, taxon, lineage) in lineage_ch
+        id = taxid(taxon)
         lineage_txt = sprint(io -> print_lineage(io, lineage))
-        write(o, "$(qseqid)\t$(lineage_txt)\n")
+        write(o, "$(qseqid)\t$(id)\t$(lineage_txt)\n")
     end
 end
 
@@ -103,7 +104,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
             next = fetch(in_channel)
             if qseqid(record) != qseqid(next)
                 put!(out_channel, (qseqid(record),results))
-                results = Dict{Taxon, BlastResult}()
+                results = Dict{Taxon,BlastResult}()
             end
         catch e
             put!(out_channel, (qseqid(record),results))
@@ -113,11 +114,11 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
     close(out_channel)
 end
 
-function lca_blastresults!(out_channel::Channel{Tuple{String, Lineage}}, in_channel::Channel{Tuple{String, Dict{Taxon, BlastResult}}}, method::Function, ranks)
+function lca_blastresults!(out_channel::Channel{Tuple{String,Taxon,Lineage}}, in_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, method::Function, ranks)
     for results in in_channel
         taxon = method(results[2])
         lineage = reformat(Lineage(taxon), ranks)
-        put!(out_channel, (results[1], lineage))
+        put!(out_channel, (results[1], taxon, lineage))
     end
     close(out_channel)
 end
