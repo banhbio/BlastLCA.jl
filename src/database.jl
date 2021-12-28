@@ -16,7 +16,7 @@ end
 
 function _insert_rows!(db::SQLite.DB, f::IOStream, accession_col::Int, taxid_col::Int)
     lines = [line for line in readlines(f)]
-    cols = map( x-> split(x, "\t"), chunks)
+    cols = map( x-> split(x, "\t"), lines)
     accessions = map(x -> getindex(x,accession_col), cols)
     taxids = map(x -> getindex(x,taxid_col), cols) 
     stmt = DBInterface.prepare(db, "INSERT INTO $table(accession, taxid) VALUES(:accession,:taxid)")
