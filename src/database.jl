@@ -1,26 +1,14 @@
 const table="accession2taxid"
 
-function create!(db::SQLite.DB, source::String; overwrite::Bool=false, header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
+function create!(db::SQLite.DB, source::String; overwrite::Bool=false, header::Bool=true, delim::Union{Nothing, Char, String}=nothing , accession_col::Int=2, taxid_col::Int=3)
     overwrite ? DBInterface.execute(db,"DROP TABLE IF EXISTS $table") : nothing
-    DBInterface.execute(db,"CREATE TABLE $table(accession TEXT PRIMARY KEY, taxid INTEGER)")
-    insert!(db, source; header=header, accession_col=accession_col, taxid_col=taxid_col)
+    col_width = max(accession_col, taxid_col)
+    temp_colname= ["Column_$i "for i in 1:col_width]
+    temp_colname[accession_col] = "accession"
+    temp_colname[taxid_col] = "taxid"
+    CSV.File(source; header=temp_colname, select=[accession_col,taxid_col], delim=delim) |> SQLite.load!(db, table)
+    SQLite.createindex!(db, table, "accessionindex", "accession")
     return db
-end
-
-function Base.insert!(db::SQLite.DB, source::String; header::Bool=true, accession_col::Int=2, taxid_col::Int=3)
-    f = open(source, "r")
-    header ? readline(f) : nothing #skip header
-    _insert_rows!(db, f, accession_col, taxid_col)
-    close(f)
-end
-
-function _insert_rows!(db::SQLite.DB, f::IOStream, accession_col::Int, taxid_col::Int)
-    lines = [line for line in readlines(f)]
-    cols = map( x-> split(x, "\t"), lines)
-    accessions = map(x -> getindex(x,accession_col), cols)
-    taxids = map(x -> getindex(x,taxid_col), cols) 
-    stmt = DBInterface.prepare(db, "INSERT INTO $table(accession, taxid) VALUES(:accession,:taxid)")
-    DBInterface.executemany(stmt, (accession=accessions, taxid=taxids))
 end
 
 function Base.get(db::SQLite.DB, accession::String, default::Any)
