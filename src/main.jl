@@ -40,7 +40,7 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, kwargs...)
     f = open(filepath,"r")
     o = open(outpath,"w")
     try
-        lca_ch = blastLCA(f; kwargs)
+        lca_ch = blastLCA(f; kwargs...)
         for (qseqid, taxon, lineage) in lca_ch
             id = taxid(taxon)
             lineage_txt = sprint(io -> print_lineage(io, lineage))
@@ -52,7 +52,7 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, kwargs...)
     end
 end
 
-function blastLCA(f::IOStream ; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true)
+function blastLCA(f::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true)
 
     blastresult_ch = Channel{BlastResult}(32)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(32)
