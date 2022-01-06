@@ -115,7 +115,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
     close(out_channel)
 end
 
-function lca_blastresults!(out_channel::Channel{Tuple{String,Taxon,Lineage}}, in_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, method::Function, ranks; rmselfhit=rmselhit)
+function lca_blastresults!(out_channel::Channel{Tuple{String,Taxon,Lineage}}, in_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, method::Function, ranks; rmselfhit=true)
     for results in in_channel
         records = results[2]
         if rmselfhit
