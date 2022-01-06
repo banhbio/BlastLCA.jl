@@ -119,7 +119,7 @@ function lca_blastresults!(out_channel::Channel{Tuple{String,Taxon,Lineage}}, in
     for results in in_channel
         records = results[2]
         if rmselfhit
-            filter!(x -> qseqid(x) == sseqid(x), results[2])
+            filter!(x -> qseqid(x) == sseqid(x), records)
         end
         taxon = method(records)
         lineage = reformat(Lineage(taxon), ranks)
