@@ -36,11 +36,11 @@ end
 qseqid(record::BlastResult) = record.qseqid
 sseqid(record::BlastResult) = record.sseqid
 
-function blastLCA(;filepath::AbstractString, outpath::AbstractString, kwargs...) 
+function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true) 
     f = open(filepath,"r")
     o = open(outpath,"w")
     try
-        lca_ch = blastLCA(f; kwargs...)
+        lca_ch = blastLCA(f; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header, ranks=ranks, rmselfhit=rmselfhit)
         for (qseqid, taxon, lineage) in lca_ch
             id = taxid(taxon)
             lineage_txt = sprint(io -> print_lineage(io, lineage))
@@ -60,7 +60,7 @@ function blastLCA(f::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method:
 
     @async parse_blastresult!(blastresult_ch, f, header)
     @async put_blastresults!(lcainput_ch, blastresult_ch, sqlite, taxonomy)
-    @async lca_blastresults!(lineage_ch, lcainput_ch, method, ranks; rmselfhit=rmselfhit)
+    @async lca_blastresults!(lineage_ch, lcainput_ch, method, ranks, rmselfhit)
 
     return lineage_ch
 end
@@ -115,7 +115,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
     close(out_channel)
 end
 
-function lca_blastresults!(out_channel::Channel{Tuple{String,Taxon,Lineage}}, in_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, method::Function, ranks; rmselfhit=true)
+function lca_blastresults!(out_channel::Channel{Tuple{String,Taxon,Lineage}}, in_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, method::Function, ranks, rmselfhit)
     for results in in_channel
         records = results[2]
         if rmselfhit
