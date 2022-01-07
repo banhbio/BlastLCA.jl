@@ -54,9 +54,9 @@ end
 
 function blastLCA(f::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true)
 
-    blastresult_ch = Channel{BlastResult}(32)
-    lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(32)
-    lineage_ch = Channel{Tuple{String,Taxon,Lineage}}(32)
+    blastresult_ch = Channel{BlastResult}(500)
+    lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
+    lineage_ch = Channel{Tuple{String,Taxon,Lineage}}(500)
 
     t1 = @async parse_blastresult!(blastresult_ch, f, header)
     t2 = @async put_blastresults!(lcainput_ch, blastresult_ch, sqlite, taxonomy)
