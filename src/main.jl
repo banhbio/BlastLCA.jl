@@ -52,7 +52,7 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQ
     end
 end
 
-function blastLCA(f::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true)
+function blastLCA(f::IO; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true)
 
     blastresult_ch = Channel{BlastResult}(500)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
@@ -69,7 +69,7 @@ function blastLCA(f::IOStream; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method:
     return lineage_ch
 end
 
-function parse_blastresult!(out_channel::Channel{BlastResult}, f::IOStream, header::Bool, rmselfhit::Bool)
+function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bool, rmselfhit::Bool)
     header ? readline(f) : nothing
     for line in eachline(f)
         record = BlastResult(line)
