@@ -52,6 +52,19 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQ
     end
 end
 
+function BlastLCA.blastLCA(df::DataFrames; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, ranks=[:superkingdom, :phylum, :class. :order, :familiy, :genus, :species], rmselfhit=true)
+    f = IOBuffer()
+    CSV.write(f, df; delim="\t")
+    seek(f, 0)
+    lca_ch = blastLCA(f; sqlite=sqlite, taxonomy=taxonomy, method=method, header=true, ranks=ranks, rmselfhit=rmselfhit)
+    lca_rows = NamedTuple{(:qseqid, :taxon, :lineage), Tuple{String, Taxon, Lineage}}
+    for (qseqid, taxon, lineage) in lca_ch
+        row = (qseqid = qseqid, taxon = taxon, lineage = lineage)
+        push!(lca_rows, row)
+    end
+    return DataFrame(lca_rows)
+end
+
 function blastLCA(f::IO; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true)
 
     blastresult_ch = Channel{BlastResult}(500)
