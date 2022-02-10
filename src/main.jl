@@ -52,12 +52,12 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQ
     end
 end
 
-function BlastLCA.blastLCA(df::DataFrames; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, ranks=[:superkingdom, :phylum, :class. :order, :familiy, :genus, :species], rmselfhit=true)
+function blastLCA(df::DataFrame; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, ranks=[:superkingdom, :phylum, :class. :order, :familiy, :genus, :species], rmselfhit=true)
     f = IOBuffer()
     CSV.write(f, df; delim="\t")
     seek(f, 0)
     lca_ch = blastLCA(f; sqlite=sqlite, taxonomy=taxonomy, method=method, header=true, ranks=ranks, rmselfhit=rmselfhit)
-    lca_rows = NamedTuple{(:qseqid, :taxon, :lineage), Tuple{String, Taxon, Lineage}}
+    lca_rows = NamedTuple{(:qseqid, :taxon, :lineage), Tuple{String, Taxon, Lineage}}[]
     for (qseqid, taxon, lineage) in lca_ch
         row = (qseqid = qseqid, taxon = taxon, lineage = lineage)
         push!(lca_rows, row)
@@ -106,7 +106,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
             @warn "record $(sseqid(record)) has no taxid in $(sqlite.file)"
             taxon = nothing
         else
-            taxon = get(taxid, taxonomy, nothing)
+            taxon = get(taxonomy, taxid, nothing)
         end
 
         if taxon === nothing

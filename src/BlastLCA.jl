@@ -5,6 +5,7 @@ using SQLite
 using CSV
 using DataStructures:
     Stack
+using DataFrames
 export create!,insert!,get,
        BlastResult,
        blastLCA,
