@@ -6,7 +6,7 @@ function create!(db::SQLite.DB, source::String; overwrite::Bool=false, header::B
     temp_colname= [ "Column_$i" for i in 1:col_width ]
     temp_colname[accession_col] = "accession"
     temp_colname[taxid_col] = "taxid"
-    CSV.File(source; header=temp_colname, select=[accession_col,taxid_col], delim=delim) |> SQLite.load!(db, table)
+    CSV.File(source; header=temp_colname, select=[accession_col,taxid_col], types=Dict(accession_col => String, taxid_col => Int), delim=delim) |> SQLite.load!(db, table)
     SQLite.createindex!(db, table, "accessionindex", "accession")
     return db
 end
