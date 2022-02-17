@@ -102,7 +102,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
         record = take!(in_channel)
         taxid = get(sqlite, sseqid(record), nothing)
 
-        if taxid === nothing
+        if taxid === nothing || taxid === missing
             @warn "record $(sseqid(record)) has no taxid in $(sqlite.file)"
             taxon = nothing
         else
