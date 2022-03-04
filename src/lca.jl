@@ -1,8 +1,5 @@
-function BestHit(leaves::Dict{Taxon,Int})
-    return last(findmax(leaves))
-end
-
-function freeLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64,ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
+function freeLCA(input::Tuple{String,Dict{Taxon,BlastResult}}, minimal::Float64,ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
+    leaves = last(input)
     besthitscore = first(findmax([last(l).bitscore for l in leaves]))
     filter!(x -> last(x).bitscore > besthitscore*minimal, leaves)
     taxa = collect(keys(leaves))
@@ -11,8 +8,9 @@ function freeLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64,ranks::Vector
     return corrected_taxon
 end
 
-function weightedLCA(leaves::Dict{Taxon,BlastResult}, minimal::Float64, cutoff::Float64, ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
+function weightedLCA(input::Tuple{String,Dict{Taxon,BlastResult}}, minimal::Float64, cutoff::Float64, ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
     @assert cutoff > 0.5 && cutoff < 1
+    leaves = last(input)
     besthitscore = first(findmax([last(l).bitscore for l in leaves]))
     filtered_leaves = filter(x -> last(x).bitscore > besthitscore*minimal, leaves)
 

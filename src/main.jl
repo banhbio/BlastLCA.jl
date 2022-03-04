@@ -137,8 +137,7 @@ end
 
 function lca_blastresults!(out_channel::Channel{Tuple{String,Taxon,Lineage}}, in_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, method::Function, ranks)
     for results in in_channel
-        records = results[2]
-        taxon = method(records)
+        taxon = method(record)
         lineage = reformat(Lineage(taxon), ranks)
         put!(out_channel, (results[1], taxon, lineage))
     end
