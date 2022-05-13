@@ -111,6 +111,8 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
 
         if taxon === nothing
             @warn "There is no taxon correspondinig to $(taxid)!\ncontinue..."
+        elseif isdescendant(taxon, Taxon(28384, taxonomy)) || isdescendant(taxon, Taxon(12908, taxonomy))
+            @warn "This sequence ($(taxid)) is coming from other sequences or unclassifiedsequences\ncontinue..."
         else
             if ! haskey(results, taxon)
                 results[taxon] = record
