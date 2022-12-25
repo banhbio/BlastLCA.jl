@@ -1,22 +1,25 @@
 struct BlastResult 
     qseqid::String
     staxid::Int
+    pident::Float64
     bitscore::Float64
 end
 
 
-function BlastResult(line::AbstractString, qseqid_pos::Int, staxid_pos::Int, bitscore_pos::Int)
+function BlastResult(line::AbstractString, qseqid_pos::Int, staxid_pos::Int, pident_pos::Int, bitscore_pos::Int)
     cols = split(line, "\t")
 
     qseqid = cols[qseqid_pos]
     staxid = cols[staxid_pos]
+    pident = parse(Float64, cols[pident_pos])
     bitscore = parse(Float64, cols[bitscore_pos])
 
-    return BlastResult(qseqid, staxid, bitscore)
+    return BlastResult(qseqid, staxid, pident, bitscore)
 end
 
 qseqid(record::BlastResult) = record.qseqid
 staxid(record::BlastResult) = record.staxid
+pident(record::BlastResult) = record.pident
 bitscore(record::BlastResult) = record.bitscore
 
 function blastLCA(filepath::AbstractString, outpath::AbstractString; kwargs...) 
@@ -48,14 +51,14 @@ function blastLCA(df::DataFrame; kwargs...)
     return DataFrame(lca_rows)
 end
 
-function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=false, qseqid_pos::Int=1, staxid_pos::Int=2, bitscore_pos::Int=3, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species])
+function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=false, qseqid_pos::Int=1, staxid_pos::Int=2, pident_pos::Int=3 bitscore_pos::Int=4, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species])
 
     blastresult_ch = Channel{BlastResult}(500)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
     lineage_ch = Channel{Tuple{String,Taxon,Lineage}}(500)
 
     t1 = @async parse_blastresult!(blastresult_ch, f, header, qseqid_pos, staxid_pos, bitscore_pos)
-    t2 = @async put_blastresults!(lcainput_ch, blastresult_ch, sqlite, taxonomy)
+    t2 = @async put_blastresults!(lcainput_ch, blastresult_ch, taxonomy)
     t3 = @async lca_blastresults!(lineage_ch, lcainput_ch, method, ranks)
 
     bind(blastresult_ch, t1)
@@ -69,28 +72,19 @@ function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bo
     header ? readline(f) : nothing
     for line in eachline(f)
         record = BlastResult(line, qseqid_pos, staxid_pos, bitscore_pos)
-        if rmselfhit && qseqid(record) == sseqid(record)
-            continue
-        end 
         put!(out_channel, record)
     end
     close(out_channel)
 end
 
-function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, in_channel::Channel{BlastResult}, sqlite::SQLite.DB, taxonomy::Taxonomy.DB)
+function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastResult}}}, in_channel::Channel{BlastResult}, taxonomy::Taxonomy.DB)
 
     results = Dict{Taxon,BlastResult}()
 
     while true
         record = take!(in_channel)
-        taxid = get(sqlite, sseqid(record), nothing)
-
-        if taxid === nothing || taxid === missing
-            @warn "record $(sseqid(record)) has no taxid in $(sqlite.file)"
-            taxon = nothing
-        else
-            taxon = get(taxonomy, taxid, nothing)
-        end
+        taxid = staxid(record)
+        taxon = get(taxonomy, taxid, nothing)
 
         if taxon === nothing
             @warn "There is no taxon correspondinig to $(taxid)!\ncontinue..."
@@ -100,7 +94,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
             if ! haskey(results, taxon)
                 results[taxon] = record
             else
-                if record.bitscore > results[taxon].bitscore
+                if bitscore(record) > bitscore(results[taxon])
                     results[taxon] = record
                 end
             end
