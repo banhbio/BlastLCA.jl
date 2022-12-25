@@ -1,46 +1,29 @@
 struct BlastResult 
     qseqid::String
-    sseqid::String
-    pident::Float64
-    length::Int
-    mismatch::Int
-    gapopen::Int
-    qstart::Int
-    qend::Int
-    sstart::Int
-    send::Int
-    evalue::Float64
+    staxid::Int
     bitscore::Float64
 end
 
 
-function BlastResult(line::AbstractString)
+function BlastResult(line::AbstractString, qseqid_pos::Int, staxid_pos::Int, bitscore_pos::Int)
     cols = split(line, "\t")
 
-    qseqid = cols[1]
-    sseqid = cols[2]
-    pident = parse(Float64, cols[3])
-    length = parse(Int, cols[4])
-    mismatch = parse(Int, cols[5])
-    gapopen = parse(Int, cols[6])
-    qstart = parse(Int, cols[7])
-    qend = parse(Int, cols[8])
-    sstart = parse(Int, cols[9])
-    send = parse(Int, cols[10])
-    evalue = parse(Float64, cols[11])
-    bitscore = parse(Float64, cols[12])
+    qseqid = cols[qseqid_pos]
+    staxid = cols[staxid_pos]
+    bitscore = parse(Float64, cols[bitscore_pos])
 
-    return BlastResult(qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore)
+    return BlastResult(qseqid, staxid, bitscore)
 end
 
 qseqid(record::BlastResult) = record.qseqid
-sseqid(record::BlastResult) = record.sseqid
+staxid(record::BlastResult) = record.staxid
+bitscore(record::BlastResult) = record.bitscore
 
-function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true) 
+function blastLCA(filepath::AbstractString, outpath::AbstractString; kwargs...) 
     f = open(filepath,"r")
     o = open(outpath,"w")
     try
-        lca_ch = blastLCA(f; sqlite=sqlite, taxonomy=taxonomy, method=method, header=header, ranks=ranks, rmselfhit=rmselfhit)
+        lca_ch = blastLCA(f; kwargs...)
         for (qseqid, taxon, lineage) in lca_ch
             id = taxid(taxon)
             lineage_txt = sprint(io -> print_lineage(io, lineage))
@@ -52,11 +35,11 @@ function blastLCA(;filepath::AbstractString, outpath::AbstractString, sqlite::SQ
     end
 end
 
-function blastLCA(df::DataFrame; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, ranks=[:superkingdom, :phylum, :class. :order, :familiy, :genus, :species], rmselfhit=true)
+function blastLCA(df::DataFrame; kwargs...)
     f = IOBuffer()
     CSV.write(f, df; delim="\t")
     seek(f, 0)
-    lca_ch = blastLCA(f; sqlite=sqlite, taxonomy=taxonomy, method=method, header=true, ranks=ranks, rmselfhit=rmselfhit)
+    lca_ch = blastLCA(f; kwargs...)
     lca_rows = NamedTuple{(:qseqid, :taxon, :lineage), Tuple{String, Taxon, Lineage}}[]
     for (qseqid, taxon, lineage) in lca_ch
         row = (qseqid = qseqid, taxon = taxon, lineage = lineage)
@@ -65,13 +48,13 @@ function blastLCA(df::DataFrame; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, metho
     return DataFrame(lca_rows)
 end
 
-function blastLCA(f::IO; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Function, header::Bool=false, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rmselfhit=true)
+function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=false, qseqid_pos::Int=1, staxid_pos::Int=2, bitscore_pos::Int=3, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species])
 
     blastresult_ch = Channel{BlastResult}(500)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
     lineage_ch = Channel{Tuple{String,Taxon,Lineage}}(500)
 
-    t1 = @async parse_blastresult!(blastresult_ch, f, header, rmselfhit)
+    t1 = @async parse_blastresult!(blastresult_ch, f, header, qseqid_pos, staxid_pos, bitscore_pos)
     t2 = @async put_blastresults!(lcainput_ch, blastresult_ch, sqlite, taxonomy)
     t3 = @async lca_blastresults!(lineage_ch, lcainput_ch, method, ranks)
 
@@ -82,10 +65,10 @@ function blastLCA(f::IO; sqlite::SQLite.DB, taxonomy::Taxonomy.DB, method::Funct
     return lineage_ch
 end
 
-function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bool, rmselfhit::Bool)
+function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bool, qseqid_pos::Int, staxid_pos::Int, bitscore_pos::Int)
     header ? readline(f) : nothing
     for line in eachline(f)
-        record = BlastResult(line)
+        record = BlastResult(line, qseqid_pos, staxid_pos, bitscore_pos)
         if rmselfhit && qseqid(record) == sseqid(record)
             continue
         end 
