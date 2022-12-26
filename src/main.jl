@@ -1,6 +1,6 @@
 struct BlastResult 
     qseqid::String
-    staxid::Int
+    staxids::Vector{Int}
     pident::Float64
     bitscore::Float64
 end
@@ -10,7 +10,7 @@ function BlastResult(line::AbstractString, qseqid_pos::Int, staxid_pos::Int, pid
     cols = split(line, "\t")
 
     qseqid = cols[qseqid_pos]
-    staxid = cols[staxid_pos]
+    staxids = parse.(Int, split(cols[staxid_pos], ";"))
     pident = parse(Float64, cols[pident_pos])
     bitscore = parse(Float64, cols[bitscore_pos])
 
@@ -18,7 +18,7 @@ function BlastResult(line::AbstractString, qseqid_pos::Int, staxid_pos::Int, pid
 end
 
 qseqid(record::BlastResult) = record.qseqid
-staxid(record::BlastResult) = record.staxid
+staxids(record::BlastResult) = record.staxid
 pident(record::BlastResult) = record.pident
 bitscore(record::BlastResult) = record.bitscore
 
@@ -83,7 +83,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
 
     while true
         record = take!(in_channel)
-        taxid = staxid(record)
+        taxid = staxids(record) |> first
         taxon = get(taxonomy, taxid, nothing)
 
         if taxon === nothing
