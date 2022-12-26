@@ -18,7 +18,7 @@ function BlastResult(line::AbstractString, qseqid_pos::Int, staxid_pos::Int, pid
 end
 
 qseqid(record::BlastResult) = record.qseqid
-staxids(record::BlastResult) = record.staxid
+staxids(record::BlastResult) = record.staxids
 pident(record::BlastResult) = record.pident
 bitscore(record::BlastResult) = record.bitscore
 
