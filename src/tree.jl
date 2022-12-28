@@ -14,7 +14,7 @@ function topolgoy(taxa::Vector{Taxon}; intermediate=false)
     all_taxon = union(lineages...)
     branches = Dict{Taxon, Taxon}()
     for node in all_taxon
-        parent_node = parent(node)
+        parent_node = AbstractTrees.parent(node)
         if parent_node !== nothing
             branches[node] = parent_node
         end
