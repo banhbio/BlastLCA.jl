@@ -93,7 +93,7 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
         end
 
         if taxon === nothing
-            @warn "There is no taxon correspondinig to $(qseqid(record))!\ncontinue..."
+            @warn "There is no taxon correspondinig to the hit of $(qseqid(record))!\ncontinue..."
         elseif isdescendant(taxon, Taxon(28384, taxonomy)) || isdescendant(taxon, Taxon(12908, taxonomy))
             @warn "This sequence ($(qseqid(record))) is coming from other sequences or unclassifiedsequences\ncontinue..."
         else
@@ -109,7 +109,9 @@ function put_blastresults!(out_channel::Channel{Tuple{String,Dict{Taxon,BlastRes
         try
             next = fetch(in_channel)
             if qseqid(record) != qseqid(next)
-                put!(out_channel, (qseqid(record),results))
+                if !isempty(results)
+                    put!(out_channel, (qseqid(record),results))
+                end
                 results = Dict{Taxon,BlastResult}()
             end
         catch e
