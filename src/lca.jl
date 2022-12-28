@@ -11,10 +11,11 @@ end
 function weightedLCA(input::Tuple{String,Dict{Taxon,BlastResult}}, minimal::Float64, cutoff::Float64, ranks::Vector{Symbol},precision::Dict{Symbol, Float64})
     @assert cutoff > 0.5 && cutoff < 1
     leaves = last(input)
+    l = collect(leaves)
     besthitscore = first(findmax(bitscore.(last.(l))))
-    filtered_leaves = filter(x -> bitscore(last(x)) > besthitscore*minimal, leaves)
+    filtered_leaves = filter(x -> bitscore(last(x)) > besthitscore*minimal, l)
 
-    taxa = collect(keys(filtered_leaves))
+    taxa = first.(filtered_leaves)
     tree = topolgoy(taxa)
 
     total_bitscore = sum(bitscore.(last.(l)))
