@@ -1,7 +1,6 @@
 module BlastLCA
 
 using Taxonomy
-using SQLite
 using CSV
 using AbstractTrees
 using DataStructures:
