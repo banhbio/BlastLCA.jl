@@ -1,6 +1,7 @@
 using BlastLCA
 using Test
 using Taxonomy
+using AbstractTrees
 
 taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
 
@@ -55,3 +56,8 @@ taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
     @test length(result) == 4
 end
 
+@testset "tree.jl" begin
+    tree = BlastLCA.topolgoy(Taxon.([9593, 9605, 9606, 9597, 9601]))
+
+    @test taxid(tree.node) == 9604
+end
