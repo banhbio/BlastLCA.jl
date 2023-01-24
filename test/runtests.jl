@@ -1,5 +1,8 @@
 using BlastLCA
 using Test
+using Taxonomy
+
+taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
 
 @testset "parse.jl" begin
     result = BlastResult("test1\tWP_034815402.1\t100\t158\t0\t0\t1\t158\t1\t158\t3.11e-109\t318\t1207058;2630699", 1, 13, 3, 12)
@@ -36,5 +39,19 @@ using Test
     @test isempty(BlastLCA.staxids(result2))
     @test BlastLCA.pident(result2) == 96.8
     @test BlastLCA.bitscore(result2) == 310
+
+    f = IOBuffer()
+    write(f,lines)
+    seek(f, 0)
+    blastresult_ch = Channel{BlastResult}(500)
+    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 13, 3, 12)
+     
+    lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
+    BlastLCA.put_blastresults!(lcainput_ch, blastresult_ch, taxonomy)
+    taxon_and_result = take!(lcainput_ch)
+    qid = first(taxon_and_result)
+    result = last(taxon_and_result)
+    @test qid == "test1"
+    @test length(result) == 4
 end
 
