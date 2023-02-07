@@ -44,3 +44,31 @@ blastLCA(diamond_path, "lca_output_path.txt";
                bitscore_pos=12
                );
 ```
+
+
+## CLI
+
+This package also support CLI.
+
+### install
+
+```bash
+git clone https://github.com/banhbio/BlastLCA.jl.git
+cd BlastLCA.jl
+julia --project deps/builds.jl
+
+export PATH="~/.julia/bin:$PATH"
+#or
+ln -s ~/.julia/bin/blastlca /where/in/PATH
+```
+
+### usage
+```bash
+blastlca -h
+blastlca weighted -h
+```
+
+Run weighted LCA
+```bash
+balstlca wighted /your/blastresult.tsv -o output.tsv --nodes-path /db/nodes.dmp --names-path /db/names.dmp
+```
