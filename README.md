@@ -57,7 +57,7 @@ git clone https://github.com/banhbio/BlastLCA.jl.git
 cd BlastLCA.jl
 julia --project deps/builds.jl
 
-export PATH="~/.julia/bin"
+export PATH="~/.julia/bin:$PATH"
 #or
 ln -s ~/.julia/bin/blastlca /where/in/PATH
 ```
