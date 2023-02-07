@@ -54,9 +54,33 @@ taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
     result = last(taxon_and_result)
     @test qid == "test1"
     @test length(result) == 4
-end
+    
+    
+    minimal = 0.90
+    cutoff = 0.67
+    precision = Dict{Symbol, Float64}(
+        :class => 0.50,
+        :order => 0.65,
+        :family => 0.80,
+        :genus => 0.95,
+        :species => 1.0)
+    ranks = [:superkingdom, :phylum, :class, :order, :family, :genus, :species]
+    
+    method = x-> weightedLCA(x, minimal, cutoff, ranks, precision)
 
-@testset "tree.jl" begin
+    f = IOBuffer()
+    write(f,lines)
+    seek(f, 0)
+    blastresult_ch = Channel{BlastResult}(500)
+    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 13, 3, 12)
+    lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
+    BlastLCA.put_blastresults!(lcainput_ch, blastresult_ch, taxonomy)
+
+    lineage_ch = Channel{Tuple{String,Taxon,Lineage}}(500)
+    BlastLCA.lca_blastresults!(lineage_ch, lcainput_ch, method, ranks)
+    result = take!(lineage_ch)
+    @test result[2] == Taxon(85)
+
     tree = BlastLCA.topolgoy(Taxon.([9593, 9605, 9606, 9597, 9601]))
 
     @test taxid(tree.node) == 9604
