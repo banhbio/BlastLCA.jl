@@ -55,6 +55,7 @@ This package also supports CLI.
 ```bash
 git clone https://github.com/banhbio/BlastLCA.jl.git
 cd BlastLCA.jl
+julia -e  "import Pkg;Pkg.activate(\".\");Pkg.instantiate()"
 julia --project deps/builds.jl
 
 export PATH="~/.julia/bin:$PATH"
