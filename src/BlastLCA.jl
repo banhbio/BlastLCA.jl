@@ -13,4 +13,6 @@ export BlastResult,
 include("main.jl")
 include("tree.jl")
 include("lca.jl")
+
+include("cli.jl")
 end

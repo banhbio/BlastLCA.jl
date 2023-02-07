@@ -1,0 +1,13 @@
+name = "blastlca"
+
+[install]
+completion = true
+quiet = false
+optimize = 2
+
+[sysimg]
+incremental=false
+filter_stdlibs=true
+
+[sysimg.precompile]
+execution_file = ["deps/precompile.jl"]
