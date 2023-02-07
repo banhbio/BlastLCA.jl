@@ -56,7 +56,7 @@ calcurate LCA using weighted LCA method.
         );
 
     catch e
-        cmd_error("`$(e.msg)`")
+        cmd_error("`$(sprint(showerror,e))`")
     end
 end
 
