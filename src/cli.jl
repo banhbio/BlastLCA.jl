@@ -45,6 +45,12 @@ calcurate LCA using weighted LCA method.
 
         f = x -> weightedLCA(x, minimal, cutoff, r, pre)
 
+        if filesize(input) == 0
+            @warn "input filesize is zero"
+            touch(output)
+            return
+        end
+
         blastLCA(input, output;
                     taxonomy=db,
                     method=f,
