@@ -6,7 +6,7 @@ using AbstractTrees
 taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
 
 @testset "parse.jl" begin
-    result = BlastResult("test1\tWP_034815402.1\t100\t158\t0\t0\t1\t158\t1\t158\t3.11e-109\t318\t1207058;2630699", 1, 13, 3, 12)
+    result = BlastResult("test1\tWP_034815402.1\t100\t158\t0\t0\t1\t158\t1\t158\t3.11e-109\t318\t1207058;2630699", 1, 2, 13, 3, 12)
     
     @test BlastLCA.qseqid(result) == "test1"
     @test BlastLCA.staxids(result) == [1207058, 2630699]
@@ -27,7 +27,7 @@ taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
     write(f,lines)
     seek(f, 0)
     blastresult_ch = Channel{BlastResult}(500)
-    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 13, 3, 12)
+    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 2, 13, 3, 12)
     
     result1 = take!(blastresult_ch)
     @test BlastLCA.qseqid(result1) == "test1"
@@ -45,7 +45,7 @@ taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
     write(f,lines)
     seek(f, 0)
     blastresult_ch = Channel{BlastResult}(500)
-    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 13, 3, 12)
+    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 2, 13, 3, 12)
      
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
     BlastLCA.put_blastresults!(lcainput_ch, blastresult_ch, taxonomy)
@@ -72,7 +72,7 @@ taxonomy = Taxonomy.DB("./data/nodes.dmp", "./data/names.dmp")
     write(f,lines)
     seek(f, 0)
     blastresult_ch = Channel{BlastResult}(500)
-    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 13, 3, 12)
+    BlastLCA.parse_blastresult!(blastresult_ch, f, false, 1, 2, 13, 3, 12)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
     BlastLCA.put_blastresults!(lcainput_ch, blastresult_ch, taxonomy)
 

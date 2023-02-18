@@ -18,6 +18,7 @@ calcurate LCA using weighted LCA method.
 - `--ranks <ranks>`: should be in the JSON format. Default `"[\"superkingdom\", \"phylum\", \"class\", \"order\", \"family\", \"genus\", \"species\"]"`
 - `--precision <precision>`: should be in the JSON format. Default `"{\"class\" : 0.50, \"order\" : 0.65, \"family\" : 0.80, \"genus\" : 0.95, \"species\" : 1.0}"`
 - `--qseqid-pos <int>`: Default `1`
+- `--sseqid-pos <int or nothing>`: Default `nothing`
 - `--staxids-pos <int>`: Default `13`
 - `--pident-pos <int>`: Default `3`
 - `--bitscore-pos <int>`: Default `12`
@@ -31,7 +32,9 @@ calcurate LCA using weighted LCA method.
                 ranks="[\"superkingdom\", \"phylum\", \"class\", \"order\", \"family\", \"genus\", \"species\"]",
                 precision ="{\"class\" : 0.50, \"order\" : 0.65, \"family\" : 0.80, \"genus\" : 0.95, \"species\" : 1.0}",
                 header::Bool=false,
+                rm_selfhit::Bool=false,
                 qseqid_pos::Int=1,
+                sseqid_pos::Union{Nothing, Int}=nothing,
                 staxids_pos::Int=13,
                 pident_pos::Int=3,
                 bitscore_pos::Int=12
@@ -56,9 +59,11 @@ calcurate LCA using weighted LCA method.
                     method=f,
                     header=header,
                     qseqid_pos=qseqid_pos,
+                    sseqid_pos=sseqid_pos,
                     staxids_pos=staxids_pos,
                     pident_pos=pident_pos,
-                    bitscore_pos=bitscore_pos
+                    bitscore_pos=bitscore_pos,
+                    rm_selfhit=rm_selfhit
         );
 
     catch e

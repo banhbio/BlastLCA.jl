@@ -1,24 +1,28 @@
 struct BlastResult 
     qseqid::String
+    sseqid::Union{Nothing, String}
     staxids::Vector{Int}
     pident::Float64
     bitscore::Float64
 end
 
 
-function BlastResult(line::AbstractString, qseqid_pos::Int, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int)
+function BlastResult(line::AbstractString, qseqid_pos::Int, sseqid_pos::Union{Nothing, Int}, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int)
     cols = split(line, "\t")
 
     qseqid = cols[qseqid_pos]
+    sseqid = isnothing(sseqid_pos) ? nothing : cols[sseqid_pos]
+
     staxids_strings = String.(split(cols[staxids_pos], ";"))
     staxids = isempty(staxids_strings |> first) ? Int[] : parse.(Int, staxids_strings)
     pident = parse(Float64, cols[pident_pos])
     bitscore = parse(Float64, cols[bitscore_pos])
 
-    return BlastResult(qseqid, staxids, pident, bitscore)
+    return BlastResult(qseqid, sseqid, staxids, pident, bitscore)
 end
 
 qseqid(record::BlastResult) = record.qseqid
+sseqid(record::BlastResult) = record.sseqid
 staxids(record::BlastResult) = record.staxids
 pident(record::BlastResult) = record.pident
 bitscore(record::BlastResult) = record.bitscore
@@ -52,13 +56,13 @@ function blastLCA(df::DataFrame; kwargs...)
     return DataFrame(lca_rows)
 end
 
-function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=false, qseqid_pos::Int=1, staxids_pos::Int=2, pident_pos::Int=3, bitscore_pos::Int=4, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species])
+function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=false, qseqid_pos::Int=1, sseqid_pos::Union{Nothing, Int}=nothing, staxids_pos::Int=2, pident_pos::Int=3, bitscore_pos::Int=4, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rm_selfhit=false)
 
     blastresult_ch = Channel{BlastResult}(500)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
     lineage_ch = Channel{Tuple{String,Taxon,Lineage}}(500)
 
-    t1 = @async parse_blastresult!(blastresult_ch, f, header, qseqid_pos, staxids_pos, pident_pos, bitscore_pos)
+    t1 = @async parse_blastresult!(blastresult_ch, f, header, qseqid_pos, sseqid_pos, staxids_pos, pident_pos, bitscore_pos; rm_selfhit=rm_selfhit)
     t2 = @async put_blastresults!(lcainput_ch, blastresult_ch, taxonomy)
     t3 = @async lca_blastresults!(lineage_ch, lcainput_ch, method, ranks)
 
@@ -69,10 +73,15 @@ function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=f
     return lineage_ch
 end
 
-function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bool, qseqid_pos::Int, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int)
+function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bool, qseqid_pos::Int, sseqid_pos::Union{Nothing, Int}, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int; rm_selfhit = false)
     header ? readline(f) : nothing
     for line in eachline(f)
-        record = BlastResult(line, qseqid_pos, staxids_pos, pident_pos, bitscore_pos)
+        record = BlastResult(line, qseqid_pos, sseqid_pos, staxids_pos, pident_pos, bitscore_pos)
+        if rm_selfhit
+            if qseqid(record) == sseqid(record)
+                continue
+            end
+        end
         put!(out_channel, record)
     end
     close(out_channel)
