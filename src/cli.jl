@@ -34,7 +34,7 @@ calcurate LCA using weighted LCA method.
                 header::Bool=false,
                 rm_selfhit::Bool=false,
                 qseqid_pos::Int=1,
-                sseqid_pos::Union{Nothing, Int}=nothing,
+                sseqid_pos::Int=2,
                 staxids_pos::Int=13,
                 pident_pos::Int=3,
                 bitscore_pos::Int=12

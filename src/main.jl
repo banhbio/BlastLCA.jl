@@ -1,17 +1,17 @@
 struct BlastResult 
     qseqid::String
-    sseqid::Union{Nothing, String}
+    sseqid::String
     staxids::Vector{Int}
     pident::Float64
     bitscore::Float64
 end
 
 
-function BlastResult(line::AbstractString, qseqid_pos::Int, sseqid_pos::Union{Nothing, Int}, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int)
+function BlastResult(line::AbstractString, qseqid_pos::Int, sseqid_pos::Int, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int)
     cols = split(line, "\t")
 
     qseqid = cols[qseqid_pos]
-    sseqid = isnothing(sseqid_pos) ? nothing : cols[sseqid_pos]
+    sseqid = cols[sseqid_pos]
 
     staxids_strings = String.(split(cols[staxids_pos], ";"))
     staxids = isempty(staxids_strings |> first) ? Int[] : parse.(Int, staxids_strings)
@@ -56,7 +56,7 @@ function blastLCA(df::DataFrame; kwargs...)
     return DataFrame(lca_rows)
 end
 
-function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=false, qseqid_pos::Int=1, sseqid_pos::Union{Nothing, Int}=nothing, staxids_pos::Int=2, pident_pos::Int=3, bitscore_pos::Int=4, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rm_selfhit=false)
+function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=false, qseqid_pos::Int=1, sseqid_pos::Int=2, staxids_pos::Int=2, pident_pos::Int=3, bitscore_pos::Int=4, ranks=[:superkingdom, :phylum, :class, :order, :family, :genus, :species], rm_selfhit=false)
 
     blastresult_ch = Channel{BlastResult}(500)
     lcainput_ch = Channel{Tuple{String,Dict{Taxon,BlastResult}}}(500)
@@ -73,7 +73,7 @@ function blastLCA(f::IO; taxonomy::Taxonomy.DB, method::Function, header::Bool=f
     return lineage_ch
 end
 
-function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bool, qseqid_pos::Int, sseqid_pos::Union{Nothing, Int}, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int; rm_selfhit = false)
+function parse_blastresult!(out_channel::Channel{BlastResult}, f::IO, header::Bool, qseqid_pos::Int, sseqid_pos::Int, staxids_pos::Int, pident_pos::Int, bitscore_pos::Int; rm_selfhit = false)
     header ? readline(f) : nothing
     for line in eachline(f)
         record = BlastResult(line, qseqid_pos, sseqid_pos, staxids_pos, pident_pos, bitscore_pos)
